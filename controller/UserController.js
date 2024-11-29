@@ -1,55 +1,32 @@
 import User from "../model/UserModel.js";
 
-const checkUser = async (req, res) => {
-  const existingUser = await User.findOne({ where: { NPM } });
-  if (existingUser) {
-    return res.status(409).json({ message: "Conflict: User already exists" });
-  }
-};
-
 export const getUser = async (req, res) => {
-  const { NPM } = req.params;
-
   try {
-    const user = await User.findOne({ where: { NPM } });
-    if (!user) {
-      return res
-        .status(404)
-        .json({ message: "Not Found: User does not exist" });
-    }
-    res.status(200).json(user);
+    const response = await User.findAll({
+      attributes: ["NPM", "nama", "email", "gender", "alamat", "password"],
+    });
+    res.status(200).json(response);
   } catch (error) {
-    console.error(error);
     res
       .status(500)
-      .json({ message: "Internal Server Error: Error retrieving user", error });
+      .json({ message: "Internal Server Error", error: error.message });
   }
 };
 
 export const createUser = async (req, res) => {
-  if (!NPM || !nama || !email || !password) {
-    return res
-      .status(400)
-      .json({ message: "Bad Request: Missing required fields" });
-  }
-
   try {
-    const newUser = await User.create({
-      NPM,
-      nama,
-      email,
-      gender,
-      alamat,
-      password,
-    });
-    res
-      .status(201)
-      .json({ message: "User  created successfully", user: newUser });
+    const response = await User.create(req.body);
+    res.status(201).json({ message: "User Created", data: response });
   } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ message: "Internal Server Error: Error creating user", error });
+    if (error.name === "SequelizeValidationError") {
+      res
+        .status(400)
+        .json({ message: "Validation Error", errors: error.errors });
+    } else {
+      res
+        .status(500)
+        .json({ message: "Internal Server Error", error: error.message });
+    }
   }
 };
 
@@ -60,12 +37,15 @@ export const updateUser = async (req, res) => {
         NPM: req.params.NPM,
       },
     });
-    if (response) {
-      return res.status(200).json({ message: "User update" });
+    if (response[0] === 1) {
+      res.status(200).json({ message: "User Updated" });
+    } else {
+      res.status(404).json({ message: "User Not Found" });
     }
-    res.status(400).json(response);
   } catch (error) {
-    console.log(error.message);
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 };
 
@@ -76,11 +56,14 @@ export const deleteUser = async (req, res) => {
         NPM: req.params.NPM,
       },
     });
-    if (response) {
-      return res.status(200).json({ message: "User delete" });
+    if (response === 1) {
+      res.status(200).json({ message: "User Deleted" });
+    } else {
+      res.status(404).json({ message: "User Not Found" });
     }
-    res.status(400).json(response);
   } catch (error) {
-    console.log(error.message);
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 };

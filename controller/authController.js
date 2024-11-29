@@ -12,11 +12,7 @@ export const login = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // const validPassword = await bcrypt.compare(password, user.password);
-
-    if (password !== user.password) {
-      return res.status(400).json({ message: "Invalid password" });
-    }
+    const validPassword = await bcrypt.compare(password, user.password);
 
     const token = jwt.sign(
       { id: user.id, email: user.email },
